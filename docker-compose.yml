@@ -1,0 +1,60 @@
+version: "3.8"
+services:
+    # Web Servers: NGINX
+    # PHP Compilers: PHP FPM
+    # Cache Engines: Opcode Cache
+    api:
+        container_name: api
+        build:
+            context: .
+            target: php
+            args:
+                - APP_ENV=${APP_ENV}
+        environment:
+            - APP_ENV=${APP_ENV}
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+        ports:
+            - 9000:8080
+        depends_on:
+            - database
+            - redis
+    # Database Management Systems: MySQL
+    database:
+        container_name: database
+        image: mysql:8.0
+        ports:
+            -   3306:3306
+        environment:
+            - MYSQL_DATABASE=default
+            - MYSQL_USER=laravel
+            - MYSQL_PASSWORD=secret
+            - MYSQL_ROOT_PASSWORD=secret
+        volumes:
+            - db-data:/var/lib/mysql
+    # Cache Engines: Redis
+    redis:
+        container_name:  redis
+        image: redis:alpine
+        command: redis-server --appendonly yes --requirepass  "secret"
+        ports:
+            - 6380:6379
+    # Frontend Build Tools: Vite
+    # JavaScript Frameworks: Vue.js
+    # JavaScript Compilers: Node.js
+    vite:
+      container_name: vitetest-nodejs
+      image: node:alpine
+      ports:
+          - 5173:5173
+      working_dir: /srv/app
+      volumes:
+          -   type: bind
+              source: ./
+              target: /srv/app
+      tty: true
+      entrypoint: ["/usr/local/bin/npm"]
+      command: ["run", "dev"]
+volumes:
+    db-data: ~
